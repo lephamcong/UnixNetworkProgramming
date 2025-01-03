@@ -1,0 +1,25 @@
+# Ignore everything
+*
+
+# Allow all .c files
+!*.c
+
+# Allow directories
+!*/
+
+!*.md
+
+!*.h
+!*/
+!.gitignore
+
+# Exclude specific temporary files
+tempCodeRunnerFile.c
+
+# Ignore executable files (commonly without extensions)
+*.exe
+*.out
+*.o
+*.so
+*.a
+
