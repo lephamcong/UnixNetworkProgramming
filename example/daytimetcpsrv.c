@@ -44,7 +44,7 @@ int main() {
 
     // accept and handle connections
     for (;;) {
-        connfd = accept(listenfd, (struct sockaddr *)NULL, NULL);  // Chấp nhận kết nối từ client
+        connfd = accept(listenfd, (struct sockaddr *)NULL, NULL);  
         if (connfd < 0) {
             perror("Accept failed");
             continue;
@@ -52,7 +52,7 @@ int main() {
 
         // get current time
         ticks = time(NULL);
-        snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));  // Định dạng thời gian
+        snprintf(buff, sizeof(buff), "%.24s\r\n", ctime(&ticks));  
 
         // send current time to client
         if (write(connfd, buff, strlen(buff)) < 0) {
