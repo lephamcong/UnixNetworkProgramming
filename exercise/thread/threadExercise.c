@@ -25,7 +25,7 @@
 #include <pthread.h>
 #include <time.h>
 
-#define NUM_THREADS 1
+#define NUM_THREADS 3
 #define MAX_MSG_SIZE 1024
 #define QUEUE_SIZE 5
 

@@ -12,8 +12,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #define PORT 5500
+
+#define LOG_ERROR(msg) fprintf(stderr, "[%s:%d] %s: errno=%d (%s)\n", __FILE__, __LINE__, msg, errno, strerror(errno))
 
 struct data_employee {
     char name[100];
@@ -24,7 +27,7 @@ struct data_employee {
 };
 
 int main(int argc, char **argv) {
-    int sockfd;
+    int clientfd;
     struct sockaddr_in servaddr;
     struct data_employee employee;
 
@@ -36,11 +39,11 @@ int main(int argc, char **argv) {
     }
 
     // create TCP socket
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Socket creation failed");
+    if ((clientfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        LOG_ERROR("Socket creation failed");
         exit(1);
     } else {
-        printf("Socket created successfully\n");
+        printf("Successful: clientfd %d\n", clientfd);
     }
 
     // create server address
@@ -48,23 +51,26 @@ int main(int argc, char **argv) {
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(PORT);
     if (inet_pton(AF_INET, argv[1], &servaddr.sin_addr) <= 0) {
-        perror("Invalid address or Address not supported");
+        LOG_ERROR("Error creating server address");
+        close(clientfd);
         exit(1);
     } else {
         printf("Server address created successfully\n");
     }
 
     // connect to server
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("Connection failed");
+    if (connect(clientfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
+        LOG_ERROR("Connection failed");
+        close(clientfd);
         exit(1);
     } else {
-        printf("Connected to server\n");
+        printf("Connected to server: ");
+        printf("%s:%d\n", inet_ntoa(servaddr.sin_addr), ntohs(servaddr.sin_port));
     }
 
     // send data to server
     while (1) {
-        system("clear");
+        
         printf("Enter employee data...\n");
 
         printf("Name: ");
@@ -87,32 +93,27 @@ int main(int argc, char **argv) {
         scanf("%d", &employee.salary);
         getchar();
 
-        if (write(sockfd, &employee, sizeof(employee)) < 0) {
-            perror("Write error");
-            close(sockfd);
+        size_t bytes_sent = write(clientfd, &employee, sizeof(employee));
+        if (bytes_sent == -1) {
+            LOG_ERROR("Write failed");
+            close(clientfd);
             exit(1);
         } else {
-            printf("Data sent to server\n");
-            printf("-------------------\n");
-            printf("Name: %s\n", employee.name);
-            printf("Age: %d\n", employee.age);
-            printf("Address: %s\n", employee.address);
-            printf("Position: %s\n", employee.position);
-            printf("Salary: %d\n", employee.salary);
-            printf("-------------------\n");
+            printf("Sent %ld bytes\n", bytes_sent);
         }
         
-        printf("continue? (y/n): ");
+        printf("Continue? (y/n): ");
         char c;
         scanf("%c", &c);
         getchar();
         if (c == 'n') {
+            close(clientfd);
             break;
         }
     }
-
+    
     // close connection
-    close(sockfd);
+    close(clientfd);
 
     return 0;
 }
